@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<style>
+body {
+      background-color: linen;
+}
+h1 {
+      color: maroon;
+      margin-left: 20px;
+}
+h2 {
+      margin-left: 20px;
+      font-size: 1.2em;    
+}
+p {
+      margin-left: 20px;
+}
+p.issue {
+    color: red;
+}
+</style>
+<title>Check validity of CSV files from BBOtoXML</title>
+<h1>Check validity of one or more CSV files produced by BBOtoXML</h1>
+<p>You can select as many files as you like and then press the button.<p>
+<input type='file' accept='.xml' id="inputField" multiple>
+<button onclick="handleFiles()">Check the XML</button>
+<div id='output'></div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script>
+
+        'use strict';
+const inputElement = document.getElementById("inputField");
+const outputElement = document.getElementById("output");
+
+function handleFiles() {
+    var out = "";
+    const fileList = inputElement.files;
+    if (fileList.length == 0) outputElement.innerHTML = "<h2>No files specified to check</h2>";
+    for (let i = 0, numFiles = fileList.length; i < numFiles; i++) {
+        const file = fileList[i];
+        const reader = new FileReader();
+        reader.onload = function(loadedEvent) {
+            const url =  "noebu.php";
+            $.post(url, loadedEvent.target.result, function(data, status) {
+                var obj = JSON.parse(`${data}`);
+                if (obj != null) {
+                    var block = "<h2>" . concat(obj['name']) . concat (" - ") . concat(obj['date']) . concat("</h2>"); 
+                    if (obj["issues"] != null) obj["issues"].forEach(item=> block = block.concat('<p class="issue">') . concat(item) . concat("</p>"));
+                    out = out.concat(block);
+                }
+                outputElement.innerHTML = out;
+            });
+        }
+        reader.readAsText(file);
+    }
+} 
+
+    </script>
+

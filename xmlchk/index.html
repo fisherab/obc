@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="us-ascii">
+<title>Check validity of an XML file from RealBridge</title>
+</head>
+<body>
+<style type="text/css">body {
+      background-color: linen;
+}
+h1 {
+      color: maroon;
+      margin-left: 20px;
+}
+h2 {
+      margin-left: 20px;
+      font-size: 1.2em;    
+}
+p {
+      margin-left: 20px;
+}
+p.issue {
+    color: red;
+}
+</style>
+
+
+<h1>Check validity of an XML file from RealBridge</h1>
+
+
+
+<table border="1" cellpadding="1" cellspacing="1" style="width:500px;">
+	<tbody>
+		<tr>
+			<td><label for="xmlFile">XML file:</label></td>
+			<td><input accept=".xml" id="xmlFile" type="file" /></td>
+		</tr>
+		<tr>
+			<td><label for="namesFile">BBONames file:</label></td>
+			<td><input accept=".txt" id="namesFile" type="file" /></td>
+		</tr>
+		
+	</tbody>
+</table>
+
+<p><br />
+
+<button onclick="handleFiles()">Check the XML</button></p>
+
+<div id="output"></div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script><script>
+
+        'use strict';
+const xmlElement = document.getElementById("xmlFile");
+const namesElement = document.getElementById("namesFile");
+const outputElement = document.getElementById("output");
+
+function SyncFileReader(file) {
+    let self = this;
+    let ready = false;
+    let result = '';
+
+    const sleep = function (ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    self.readAsText = async function() {
+        while (ready === false) {
+          await sleep(100);
+        }
+        return result;
+    }    
+
+    const reader = new FileReader();
+    reader.onloadend = function(evt) {
+        result = evt.target.result;
+        ready = true;
+    };
+    reader.readAsText(file);
+  }
+  
+var loadFile = function (path) {
+    return new Promise(function (resolve, reject) {
+        readFile (path, 'utf8', function (error, data) {
+            if (error) {
+                reject(error);
+            }
+            resolve(data);
+        });
+    });
+};
+
+function handleFiles() {
+    var out = "";
+    const xmlList = xmlElement.files;
+    const namesList = namesElement.files;
+    if (xmlList.length == 0) outputElement.innerHTML = "<h2>No XML file specified to check</h2>";
+    else if (namesList.length == 0) outputElement.innerHTML = "<h2>No BBONames file specified to check</h2>";
+    else {
+        const xmlFile = xmlList[0];
+        
+        new Promise(function(resolve, reject) {
+            const reader = new FileReader();
+            reader.onload= function(evt) {
+                resolve(evt.target.result);
+            };
+            reader.readAsText(xmlFile);
+  
+        }).then(function(result) {
+            return new Promise((resolve, reject) => { 
+                const namesFile = namesList[0];
+                const reader = new FileReader();
+                reader.onload= function(evt) {
+                    var abcd = {xml:result, names: evt.target.result};
+                    resolve(abcd);
+                };
+                reader.readAsText(namesFile);
+            }).then(function(result) {
+                $.post("xmlchk.php", result, function(data,status) {
+                    var obj = JSON.parse(`${data}`);
+                    if (obj != null) {
+                        var block = "<h2>" + obj['name'] + " - " + obj['date'] + " - UMS " + obj['ums'] + "</h2>"; 
+                    if (obj["issues"] != null) obj["issues"].forEach(item=> block = block + '<p class="issue">' + item + "</p>");
+                    out = out.concat(block);
+                }
+                outputElement.innerHTML = out;
+                })
+            })
+        })
+
+    } 
+
+}
+
+    </script>
