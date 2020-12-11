@@ -120,6 +120,7 @@ function handleFiles() {
                     if (obj != null) {
                         var block = "<h2>" + obj['name'] + " - " + obj['date'] + " - UMS " + obj['ums'] + "</h2>"; 
                     if (obj["issues"] != null) obj["issues"].forEach(item=> block = block + '<p class="issue">' + item + "</p>");
+                    if (obj["warnings"] != null) obj["warnings"].forEach(item=> block = block + '<p>' + item + "</p>");
                     out = out.concat(block);
                 }
                 outputElement.innerHTML = out;

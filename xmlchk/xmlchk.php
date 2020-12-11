@@ -1,15 +1,15 @@
 <?php
 
-function endsWith( $haystack, $needle ) {
+function endsWithIgnoreCase( $haystack, $needle ) {
     $length = strlen( $needle );
     if( !$length ) {
         return true;
     }
-    return substr( $haystack, -$length ) === $needle;
+    return substr( strtoupper($haystack), -$length ) === strtoupper($needle);
 }
 
 $arr = preg_split("/\r\n|\n|\r/", $_POST["names"]);
-$ebunums = [];
+
 foreach ($arr as $value) {
     $eles = explode(",",$value);
     $given = trim($eles[1]);
@@ -17,13 +17,11 @@ foreach ($arr as $value) {
     $ebu = trim($eles[3]);
     $surnames[$ebu] = $surname;
     $names[$ebu] = $given . " " . $surname;
-    $ebunums[strtoupper($surname)][] = $ebu;
 }
 $xml = new XMLReader();
 $xml->XML($_POST["xml"]);
 
 $in_player = false;
-
 while ($xml -> read()) {
     if ($xml->name == "PLAYER") {
         if ($xml->nodeType == XMLReader::ELEMENT) {
@@ -33,7 +31,8 @@ while ($xml -> read()) {
         } elseif ($xml->nodeType == XMLReader::END_ELEMENT) {
             $in_player = false;
             if ("" == $ebu_num) $ev['issues'][] = $player_name . " has no ebu number";
-            elseif (! array_key_exists($ebu_num,$surnames) || ! endswith(strtoupper($player_name), strtoupper($surnames)[$ebu_num])) $ev['issues'][] = $player_name . " does not have ebu number " . $ebu_num; 
+            elseif (! array_key_exists($ebu_num,$surnames) || ! endsWithIgnoreCase($player_name, $surnames[$ebu_num])) $ev['issues'][] = $player_name . " does not have ebu number " . $ebu_num;
+            elseif ($names[$ebu_num] !== $player_name) $ev["warnings"][] = $player_name . " is different from Pianola's " . $names[$ebu_num];
         }
     } elseif ($xml->name == "PLAYER_NAME" AND $in_player AND $xml->nodeType == XMLReader::ELEMENT ) {
         $player_name = $xml->readString();
