@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="us-ascii">
+<title>Generate the BBONames.txt file</title>
+</head>
+<body>
+<style type="text/css">body {
+background-color: linen;
+}
+h1 {
+    color: maroon;
+    margin-left: 20px;
+}
+h2 {
+    margin-left: 20px;
+    font-size: 1.2em;    
+}
+p {
+    margin-left: 20px;
+}
+p.issue {
+    color: red;
+}
+</style>
+
+
+<h1>Generate the BBONames.txt file</h1>
+
+
+<table border="1" cellpadding="1" cellspacing="1" style="width:500px;">
+    <tbody>
+    <tr>
+        <td><label for="pianola-export">Pianola Export file:</label></td>
+        <td><input accept=".csv" id="pianola-export" type="file" /></td>
+    </tr>
+    </tbody>
+</table>
+
+<p><br />
+
+<button onclick="handleFiles()">Generate the BBONames.txt file</button></p>
+
+<div id="output"></div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script><script>
+
+'use strict';
+const pianolaExport = document.getElementById("pianola-export");
+const outputElement = document.getElementById("output");
+
+function SyncFileReader(file) {
+    let self = this;
+    let ready = false;
+    let result = '';
+
+    const sleep = function (ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    self.readAsText = async function() {
+        while (ready === false) {
+            await sleep(100);
+        }
+        return result;
+    }    
+
+    const reader = new FileReader();
+    reader.onloadend = function(evt) {
+        result = evt.target.result;
+        ready = true;
+    };
+    reader.readAsText(file);
+}
+
+var loadFile = function (path) {
+    return new Promise(function (resolve, reject) {
+            readFile (path, 'utf8', function (error, data) {
+                    if (error) {
+                    reject(error);
+                    }
+                    resolve(data);
+                    });
+            });
+};
+
+function downloadBlob(blob, filename) {
+    // Create an object URL for the blob object
+    const url = URL.createObjectURL(blob);
+
+    // Create a new anchor element
+    const a = document.createElement('a');
+
+    // Set the href and download attributes for the anchor element
+    // You can optionally set other attributes like `title`, etc
+    // Especially, if the anchor element will be attached to the DOM
+    a.href = url;
+    a.download = filename || 'download';
+
+    // Click handler that releases the object URL after the element has been clicked
+    // This is required for one-off downloads of the blob content
+//    const clickHandler = () => {
+//        setTimeout(() => {
+//                URL.revokeObjectURL(url);
+//                this.removeEventListener('click', clickHandler);
+//                }, 150);
+//    };
+
+    // Add the click event listener on the anchor element
+    // Comment out this line if you don't want a one-off download of the blob content
+//    a.addEventListener('click', clickHandler, false);
+
+    // Programmatically trigger a click on the anchor element
+    // Useful if you want the download to happen automatically
+    // Without attaching the anchor element to the DOM
+    // Comment out this line if you don't want an automatic download of the blob content
+    a.click();
+
+    // Return the anchor element
+    // Useful if you want a reference to the element
+    // in order to attach it to the DOM or use it in some other way
+    return a;
+}
+
+function handleFiles() {
+    var out = "";
+    const pianolaList = pianolaExport.files;
+    if (pianolaList.length == 0) outputElement.innerHTML = "<h2>No Input file specified to convert</h2>";
+    else {
+        const pianolaFile = pianolaList[0];
+
+        new Promise(function(resolve, reject) {
+                const reader = new FileReader();
+                reader.onload= function(evt) {
+                resolve(evt.target.result);
+                };
+                reader.readAsText(pianolaFile);
+
+                }).then(function(result) {
+                    console.log("AAA");
+                    $.post("gen-bbo.php", result, function(data,status) {
+                            var obj = JSON.parse(`${data}`);
+                            if (obj != null) {
+                            var block = "<h2>" + obj['name'] + " - " + obj['date'] + " - UMS " + obj['ums'] + "</h2>"; 
+                            if (obj["issues"] != null) obj["issues"].forEach(item=> block = block + '<p class="issue">' + item + "</p>");
+                            if (obj["warnings"] != null) obj["warnings"].forEach(item=> block = block + '<p>' + item + "</p>");
+                            out = out.concat(block);
+                            console.log(obj["bt"]);
+                            }
+                            outputElement.innerHTML = out;
+                            return obj["bt"];
+                            })
+                    }).then(result => {
+                        console.log(result);
+                        const blob = new Blob(["aaa bbb"], { type: 'text' });
+                        downloadBlob(blob, 'BBONames.txt');
+                        })
+
+    } 
+
+}
+
+</script>
