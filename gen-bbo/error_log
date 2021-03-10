@@ -1,6 +1,0 @@
-[10-Mar-2021 15:04:35 UTC] PHP Warning:  XMLReader::XML(): Empty string supplied as input in /home/stevefis/public_html/obc/gen-bbo/gen-bbo.php on line 22
-[10-Mar-2021 15:04:35 UTC] PHP Warning:  XMLReader::read(): Load Data before trying to read in /home/stevefis/public_html/obc/gen-bbo/gen-bbo.php on line 26
-[10-Mar-2021 15:10:10 UTC] PHP Warning:  XMLReader::XML(): Empty string supplied as input in /home/stevefis/public_html/obc/gen-bbo/gen-bbo.php on line 22
-[10-Mar-2021 15:10:10 UTC] PHP Warning:  XMLReader::read(): Load Data before trying to read in /home/stevefis/public_html/obc/gen-bbo/gen-bbo.php on line 26
-[10-Mar-2021 15:15:14 UTC] PHP Warning:  XMLReader::XML(): Empty string supplied as input in /home/stevefis/public_html/obc/gen-bbo/gen-bbo.php on line 22
-[10-Mar-2021 15:15:14 UTC] PHP Warning:  XMLReader::read(): Load Data before trying to read in /home/stevefis/public_html/obc/gen-bbo/gen-bbo.php on line 26
