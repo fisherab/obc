@@ -22,6 +22,7 @@ $xml = new XMLReader();
 $xml->XML($_POST["xml"]);
 
 $in_player = false;
+$ebus = [];
 while ($xml -> read()) {
     if ($xml->name == "PLAYER") {
         if ($xml->nodeType == XMLReader::ELEMENT) {
@@ -31,8 +32,10 @@ while ($xml -> read()) {
         } elseif ($xml->nodeType == XMLReader::END_ELEMENT) {
             $in_player = false;
             if ("" == $ebu_num) $ev['issues'][] = $player_name . " has no ebu number";
+            elseif (array_key_exists($ebu_num,$ebus)) $ev['issues'][] = "Checking " . $player_name . " finds ebu number " . $ebu_num . " already in use by " . $ebus[$ebu_num];
             elseif (! array_key_exists($ebu_num,$surnames) || ! endsWithIgnoreCase($player_name, $surnames[$ebu_num])) $ev['issues'][] = $player_name . " does not have ebu number " . $ebu_num;
             elseif ($names[$ebu_num] !== $player_name) $ev["warnings"][] = $player_name . " is different from Pianola's " . $names[$ebu_num];
+            $ebus[$ebu_num] = $player_name;
         }
     } elseif ($xml->name == "PLAYER_NAME" AND $in_player AND $xml->nodeType == XMLReader::ELEMENT ) {
         $player_name = $xml->readString();
