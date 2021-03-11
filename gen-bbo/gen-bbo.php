@@ -20,7 +20,7 @@ foreach ($lines as $line) {
     $csv = str_getcsv($line);
     if (count($csv) != $width) {
         $mt++;
-    } else if ($csv[$status_pos] == "Passed away") {
+    } else if (($csv[$status_pos] == "Passed away") || ($csv[$header_pos[3]] == 88888888)) {
         $excl++;
     } else {
         $ev["bt"] .= ($csv[$header_pos[0]] . "," . $csv[$header_pos[1]] . "," . $csv[$header_pos[2]] . "," . $csv[$header_pos[3]] . "\n");
