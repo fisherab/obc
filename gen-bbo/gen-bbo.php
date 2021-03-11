@@ -1,58 +1,36 @@
 <?php
 
+$contents = file_get_contents("php://input");
+$lines = preg_split("/\r\n|\n|\r/", $contents);
+$header = str_getcsv(array_shift($lines));
+$width = count($header);
+$wanted = ["BBO username", "First name", "Last name", "National number"];
+$status = "Left club reason";
+foreach ($wanted as $fname) {
+    $header_pos[] = array_search($fname, $header);
+}
+$status_pos = array_search($status, $header);
 
-$ev["warnings"][] = $player_name . " is different from Pianola's " . $names[$ebu_num];
-$ev["bt"] = "He's a lumberjack and \n he's ok";
+$ev["bt"] = '#names,,,' . "\n";
+
+$incl = 0;
+$excl = 0;
+$mt = 0;
+foreach ($lines as $line) {
+    $csv = str_getcsv($line);
+    if (count($csv) != $width) {
+        $mt++;
+    } else if ($csv[$status_pos] == "Passed away") {
+        $excl++;
+    } else {
+        $ev["bt"] .= ($csv[$header_pos[0]] . "," . $csv[$header_pos[1]] . "," . $csv[$header_pos[2]] . "," . $csv[$header_pos[3]] . "\n");
+        $incl ++;
+    }
+}
+
+$ev["warnings"][] = strval($excl) . " entries were excluded";
+$ev["warnings"][] = strval($incl) . " entries were included";
+$ev["warnings"][] = strval($mt) . " lines skipped";
 echo json_encode($ev);
 return;
 
-function endsWithIgnoreCase( $haystack, $needle ) {
-    $length = strlen( $needle );
-    if( !$length ) {
-        return true;
-    }
-    return substr( strtoupper($haystack), -$length ) === strtoupper($needle);
-}
-
-$arr = preg_split("/\r\n|\n|\r/", $_POST["names"]);
-
-foreach ($arr as $value) {
-    $eles = explode(",",$value);
-    $given = trim($eles[1]);
-    $surname = trim($eles[2]);
-    $ebu = trim($eles[3]);
-    $surnames[$ebu] = $surname;
-    $names[$ebu] = $given . " " . $surname;
-}
-$xml = new XMLReader();
-$xml->XML($_POST["xml"]);
-
-$in_player = false;
-$ebus = [];
-while ($xml -> read()) {
-    if ($xml->name == "PLAYER") {
-        if ($xml->nodeType == XMLReader::ELEMENT) {
-            $in_player = true;
-            $player_name = "";
-            $ebu_num = "";
-        } elseif ($xml->nodeType == XMLReader::END_ELEMENT) {
-            $in_player = false;
-            if ("" == $ebu_num) $ev['issues'][] = $player_name . " has no ebu number";
-            elseif (array_key_exists($ebu_num,$ebus)) $ev['issues'][] = "Checking " . $player_name . " finds ebu number " . $ebu_num . " already in use by " . $ebus[$ebu_num];
-            elseif (! array_key_exists($ebu_num,$surnames) || ! endsWithIgnoreCase($player_name, $surnames[$ebu_num])) $ev['issues'][] = $player_name . " does not have ebu number " . $ebu_num;
-            elseif ($names[$ebu_num] !== $player_name) $ev["warnings"][] = $player_name . " is different from Pianola's " . $names[$ebu_num];
-            $ebus[$ebu_num] = $player_name;
-        }
-    } elseif ($xml->name == "PLAYER_NAME" AND $in_player AND $xml->nodeType == XMLReader::ELEMENT ) {
-        $player_name = $xml->readString();
-    } elseif  ($xml->name == "NATIONAL_ID_NUMBER" AND $in_player AND $xml->nodeType == XMLReader::ELEMENT) {
-        $ebu_num = $xml->readString();
-    } elseif ($xml->name == "EVENT_DESCRIPTION" AND $xml->nodeType == XMLReader::ELEMENT ) {
-        $ev['name'] = $xml->readString();
-    } elseif ($xml->name == "DATE" AND $xml->nodeType == XMLReader::ELEMENT ) {
-        $ev['date'] = $xml->readString();
-    } elseif ($xml->name == "P2P_CHARGE_RATE" AND $xml->nodeType == XMLReader::ELEMENT ) {
-        $ev['ums'] = $xml->readString();
-    }
-}
-echo json_encode($ev);
