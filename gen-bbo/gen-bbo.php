@@ -4,12 +4,16 @@ $contents = file_get_contents("php://input");
 $lines = preg_split("/\r\n|\n|\r/", $contents);
 $header = str_getcsv(array_shift($lines));
 $width = count($header);
-$wanted = ["BBO username", "First name", "Last name", "National number"];
+$ebu_num = "National number";
+$last_name ="Last name";
+$wanted = ["BBO username", "First name", $last_name, $ebu_num];
 $status = "Left club reason";
 foreach ($wanted as $fname) {
     $header_pos[] = array_search($fname, $header);
 }
 $status_pos = array_search($status, $header);
+$ebu_pos = array_search($ebu_num,$header);
+$last_pos = array_search($last_name, $header);
 
 $ev["bt"] = '#names,,,' . "\n";
 
@@ -20,10 +24,10 @@ foreach ($lines as $line) {
     $csv = str_getcsv($line);
     if (count($csv) != $width) {
         $mt++;
-    } else if (($csv[$status_pos] == "Passed away") || ($csv[$header_pos[3]] == 88888888)) {
+    } else if (($csv[$status_pos] == "Passed away") || ($csv[$ebu_pos] == 88888888) || ! $csv[$ebu_pos] || ! $csv[$last_pos]) {
         $excl++;
     } else {
-        $ev["bt"] .= ($csv[$header_pos[0]] . "," . $csv[$header_pos[1]] . "," . $csv[$header_pos[2]] . "," . $csv[$header_pos[3]] . "\n");
+        $ev["bt"] .= ($csv[$header_pos[0]] . "," . $csv[$header_pos[1]] . "," . $csv[$last_pos] . "," . $csv[$ebu_pos] . "\n");
         $incl ++;
     }
 }
