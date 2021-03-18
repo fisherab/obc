@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<style>
+body {
+      background-color: linen;
+}
+h1 {
+      color: maroon;
+      margin-left: 20px;
+}
+h2 {
+      margin-left: 20px;
+      font-size: 1.2em;    
+}
+p {
+      margin-left: 20px;
+}
+p.issue {
+    color: red;
+}
+</style>
+<title>Check validity of PBN files</title>
+<h1>Check validity of one or more PBN files typically produced by hand</h1>
+<p>You can select as many files as you like and then press the button.<p>
+<p>Before trying to recheck a file of the same name you <b>must</b> refresh the browser otherwise a cached copy of the file will be used.</p>
+<input type='file' accept='.pbn' id="inputField" multiple>
+<button onclick="handleFiles()">Check the PBN</button>
+<div id='output'></div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script>
+
+        'use strict';
+const inputElement = document.getElementById("inputField");
+const outputElement = document.getElementById("output");
+
+function handleFiles() {
+    let out = "";
+    const fileList = inputElement.files;
+    if (fileList.length == 0) outputElement.innerHTML = "<h2>No files specified to check</h2>";
+    for (let i = 0, numFiles = fileList.length; i < numFiles; i++) {
+        const file = fileList[i];
+        const reader = new FileReader();
+        reader.onload = function(loadedEvent) {
+            const url =  "pbnchk.php";
+            $.post(url, loadedEvent.target.result, function(data, status) {
+                const obj = JSON.parse(`${data}`);
+                if (obj != null) {
+                    let block = "";
+                        if (obj["line"] != null) obj["line"].forEach(item=> block = block.concat((item[0] == 1) ? '<p class="issue">' : '<p>') . concat(item[1]) . concat("</p>"));
+                    out = out.concat(block);
+                }
+                outputElement.innerHTML = out;
+            });
+        }
+        reader.readAsText(file);
+    }
+} 
+
+    </script>
+
