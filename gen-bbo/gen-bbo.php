@@ -15,7 +15,7 @@ $status_pos = array_search($status, $header);
 $ebu_pos = array_search($ebu_num,$header);
 $last_pos = array_search($last_name, $header);
 
-$ev["bt"] = '#names,,,' . "\n";
+$ev["bt"] = chr(0xEF) . chr(0xBB) . chr(0xBF) . '#names' . "\n";
 
 $incl = 0;
 $excl = 0;
